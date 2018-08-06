@@ -1,4 +1,4 @@
-# TextSearcher
+# TextSearcher.TextSearcher
 
 Написать программу для поиска заданного текста в лог файлах
 
