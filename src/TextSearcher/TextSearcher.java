@@ -1,42 +1,88 @@
 package TextSearcher;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 
-public class TextSearcher {
+public class TextSearcher extends JFrame {
     static final FileSystem fileSystem = FileSystems.getDefault();
     static final String homePath = System.getProperty("user.home");
     static final public Path homeDirectory = Paths.get(homePath);
 
-    private final SearchResultTree searchResultTree = new SearchResultTree();
+    private final SearchPanel searchPanel = new SearchPanel("", "*.log", homePath);
 
-    private final SearchResultTabs searchResultTabs = new SearchResultTabs();
+    private final SearchResultTree searchResultTree = new SearchResultTree(this);
 
-    Thread temp = null;
+    private final SearchResultTabs searchResultTabs = new SearchResultTabs(this);
+
+    //Thread temp = null;
+
+    private final Set<Searching> searchings = new HashSet<>();
 
     public void startSearch(Path directory, String fileFilter, String what) {
         SearchResultTreeNode node = searchResultTree.addResultTree(directory, fileFilter, what);
 
-        Searching searching = new Searching(directory, fileFilter, what, node);
+        Searching searching = new Searching(directory, fileFilter, what, node, this);
 
-        temp = new Thread(searching);
+        if (searchings.add(searching)) {
+            Thread temp = new Thread(searching);
 
-        temp.start();
+            temp.start();
+        }
     }
 
+    private final ActionListener searchButtonActionListener = actionEvent -> {
+        Path directory = Paths.get(searchPanel.getWhereValue());
+        String filter = searchPanel.getFilterValue();
+        String what = searchPanel.getWhatValue();
+        startSearch(directory, filter, what);
+    };
+
     public TextSearcher() {
-        startSearch(homeDirectory, "*.log", "xml");
+        super("TextSearcher");
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setSize(640, 480);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JButton searchButton = new JButton("Search");
+        searchButton.addActionListener(searchButtonActionListener);
+
+        JPanel result = new JPanel(new GridLayout(1, 2));
+        result.add(searchResultTree);
+        result.add(searchResultTabs);
+
+        panel.add(searchPanel);
+        panel.add(searchButton);
+        panel.add(result);
+
+        this.getContentPane().add(panel);
+        this.setVisible(true);
+    }
+
+    public SearchResultTabs getSearchResultTabs() {
+        return searchResultTabs;
+    }
+
+    public SearchResultTree getSearchResultTree() {
+        return searchResultTree;
     }
 
     public static void main(String[] args) {
         TextSearcher textSearcher = new TextSearcher();
 
-        try {
-            textSearcher.temp.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        //try {
+        //    textSearcher.startSearch(homeDirectory, "*.log", "xml");
+        //    textSearcher.temp.join();
+        //} catch (InterruptedException e) {
+        //    e.printStackTrace();
+        //}
     }
 }
