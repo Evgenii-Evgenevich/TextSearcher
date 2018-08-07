@@ -52,9 +52,12 @@ public class SearchResultTree extends JScrollPane implements TreeModel {
         return node;
     }
 
+    public void scrollPathToVisible(TreeNode node) {
+        tree.scrollPathToVisible(getPath(node));
+    }
+
     public void reload() {
         treeStructureChanged(getPath(root));
-        //tree.expandPath(getPath(root));
     }
 
     public void reload(TreeNode node) {

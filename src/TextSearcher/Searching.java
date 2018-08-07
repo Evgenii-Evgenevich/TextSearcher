@@ -2,10 +2,12 @@ package TextSearcher;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.function.Predicate;
 
 public class Searching implements Runnable {
     private final Path directory;
@@ -13,6 +15,7 @@ public class Searching implements Runnable {
     private final String what;
     private final SearchResultTreeNode searchNode;
     private final TextSearcher textSearcher;
+
 
     public Searching(Path directory, String fileFilter, String what, SearchResultTreeNode node, TextSearcher textSearcher) {
         this.directory = directory;
@@ -34,8 +37,6 @@ public class Searching implements Runnable {
                 System.out.println(path);
                 textSearcher.getSearchResultTree().reload();
             }
-        } catch (FileSystemException e) {
-            //e.printStackTrace();
         } catch (IOException e) {
             //e.printStackTrace();
         } catch (UncheckedIOException e) {
@@ -50,8 +51,6 @@ public class Searching implements Runnable {
                     //.walk(directory, Integer.MAX_VALUE).filter(this::filter).filter(path -> !Files.isDirectory(path))
                     .forEach(this::search)
             ;
-        } catch (FileSystemException e) {
-            //e.printStackTrace();
         } catch (IOException e) {
             //e.printStackTrace();
         } catch (UncheckedIOException e) {
@@ -61,17 +60,18 @@ public class Searching implements Runnable {
 
     private void fileSearch(Path path, SearchResultTreeNode treeNode) {
         try {
-            if (Files.lines(path).anyMatch(line -> line.contains(this.what))) {
-                treeNode.addResult(path);
+            if (Files.lines(path, StandardCharsets.ISO_8859_1).anyMatch(line -> line.contains(this.what))) {
+                SearchResultTreeNode newNode = treeNode.addResult(path);
                 System.out.println(path);
                 textSearcher.getSearchResultTree().reload();
+                textSearcher.getSearchResultTree().scrollPathToVisible(newNode);
             }
-        } catch (FileSystemException e) {
-            //e.printStackTrace();
         } catch (IOException e) {
-            //e.printStackTrace();
+            System.out.println("IOException " + e.getMessage());
+            System.out.println("IOException " + path);
         } catch (UncheckedIOException e) {
-            //e.printStackTrace();
+            System.out.println("UncheckedIOException " + e.getMessage());
+            System.out.println("UncheckedIOException " + path);
         }
     }
 
@@ -85,8 +85,6 @@ public class Searching implements Runnable {
                     fileSearch(path, newNode);
                 }
             });
-        } catch (FileSystemException e) {
-            //e.printStackTrace();
         } catch (IOException e) {
             //e.printStackTrace();
         } catch (UncheckedIOException e) {
@@ -107,8 +105,6 @@ public class Searching implements Runnable {
                     fileSearch(path, searchNode);
                 }
             });
-        } catch (FileSystemException e) {
-            //e.printStackTrace();
         } catch (IOException e) {
             //e.printStackTrace();
         } catch (UncheckedIOException e) {

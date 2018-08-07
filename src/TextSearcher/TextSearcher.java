@@ -44,6 +44,19 @@ public class TextSearcher extends JFrame {
         startSearch(directory, filter, what);
     };
 
+    private final ActionListener nextButtonActionListener = actionEvent -> {
+    };
+
+    private final ActionListener previousButtonActionListener = actionEvent -> {
+    };
+
+    private final ActionListener selectAllButtonActionListener = actionEvent -> {
+    };
+
+    private final ActionListener closeTabButtonActionListener = actionEvent -> {
+        searchResultTabs.getCurrentTab().close();
+    };
+
     public TextSearcher() {
         super("TextSearcher");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -52,15 +65,19 @@ public class TextSearcher extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        JButton searchButton = new JButton("Search");
-        searchButton.addActionListener(searchButtonActionListener);
+        JPanel buttons = new JPanel(); buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
+        buttons.add(new Button("Search", searchButtonActionListener));
+        buttons.add(new Button("Next", nextButtonActionListener));
+        buttons.add(new Button("Previous", previousButtonActionListener));
+        buttons.add(new Button("Select All", selectAllButtonActionListener));
+        buttons.add(new Button("Close Tab", closeTabButtonActionListener));
 
         JPanel result = new JPanel(new GridLayout(1, 2));
         result.add(searchResultTree);
         result.add(searchResultTabs);
 
         panel.add(searchPanel);
-        panel.add(searchButton);
+        panel.add(buttons);
         panel.add(result);
 
         this.getContentPane().add(panel);

@@ -3,15 +3,18 @@ package TextSearcher;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.plaf.metal.MetalIconFactory;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class SearchResultFile extends JScrollPane {
+public class SearchResultFile extends JScrollPane implements Runnable {
     private final Path path;
     private final SearchResultTabs tabbedPane;
 
@@ -41,14 +44,20 @@ public class SearchResultFile extends JScrollPane {
 
         this.setViewportView(text);
         text.setEditable(false);
-        read();
+
+        new Thread(this).start();
     }
 
-    private void read() {
-        try (BufferedReader bufferedReader = Files.newBufferedReader(path)) {
+    @Override
+    public void run() {
+        try (BufferedReader bufferedReader = Files.newBufferedReader(path, StandardCharsets.ISO_8859_1)) {
             bufferedReader.lines().forEachOrdered(s -> text.append(s + '\n'));
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("IOException " + e.getMessage());
+            System.out.println("IOException " + path);
+        } catch (UncheckedIOException e) {
+            System.out.println("UncheckedIOException " + e.getMessage());
+            System.out.println("UncheckedIOException " + path);
         }
     }
 
@@ -75,6 +84,6 @@ public class SearchResultFile extends JScrollPane {
 
     @Override
     public int hashCode() {
-        return path != null ? path.hashCode() : 0;
+        return path.hashCode();
     }
 }

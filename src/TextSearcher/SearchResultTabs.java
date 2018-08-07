@@ -31,4 +31,8 @@ public class SearchResultTabs extends JTabbedPane {
             this.removeTabAt(this.indexOfTab(path.toString()));
         }
     }
+
+    public SearchResultFile getCurrentTab() {
+        return (SearchResultFile) this.getSelectedComponent();
+    }
 }

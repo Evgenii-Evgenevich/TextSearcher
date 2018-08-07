@@ -13,8 +13,8 @@ public class SearchResultTreeNode implements MutableTreeNode {
     private final boolean isDirectory;
     private String name;
 
-    final List<MutableTreeNode> childrenList;
-    MutableTreeNode parent;
+    private final List<MutableTreeNode> childrenList;
+    private MutableTreeNode parent;
 
     public SearchResultTreeNode() {
         // is root
