@@ -1,13 +1,12 @@
 package TextSearcher;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystemException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
+import java.nio.file.*;
 import java.util.function.Predicate;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 public class Searching implements Runnable {
     private final Path directory;
@@ -30,11 +29,14 @@ public class Searching implements Runnable {
         return pathMatcher.matches(path);
     }
 
+    private boolean filter(String name) {
+        return name.matches("." + fileFilter);
+    }
+
     private void search(Path path) {
         try {
             if (Files.lines(path).anyMatch(line -> line.contains(this.what))) {
                 searchNode.addResult(path);
-                System.out.println(path);
                 textSearcher.getSearchResultTree().reload();
             }
         } catch (IOException e) {
@@ -58,11 +60,42 @@ public class Searching implements Runnable {
         }
     }
 
+    private boolean zipFileSeacrh(Path path, SearchResultTreeNode treeNode) {
+        try (ZipFile zipFile = new ZipFile(path.toFile())) {
+            zipFile.stream()
+                    .filter(zipEntry -> !zipEntry.isDirectory())
+                    .filter(zipEntry -> filter(zipEntry.getName()))
+                    .forEach(zipEntry -> {
+                        try (InputStream inputStream = zipFile.getInputStream(zipEntry)){
+                            CharsetDecoder decoder = StandardCharsets.ISO_8859_1.newDecoder();
+                            if ((new BufferedReader(new InputStreamReader(inputStream, decoder)))
+                                    .lines()
+                                    .anyMatch(line -> line.contains(this.what))) {
+
+                                System.out.println(path.toString() + '/' + zipEntry.getName());
+                            }
+                        } catch (IOException e) {
+                            //e.printStackTrace();
+                        } catch (UncheckedIOException e) {
+                            //e.printStackTrace();
+                        }
+                    })
+            ;
+            return true;
+        } catch (ZipException e) {
+            return false;
+        }
+        catch (IOException e) {
+            return false;
+        } catch (UncheckedIOException e) {
+            return false;
+        }
+    }
+
     private void fileSearch(Path path, SearchResultTreeNode treeNode) {
         try {
             if (Files.lines(path, StandardCharsets.ISO_8859_1).anyMatch(line -> line.contains(this.what))) {
                 SearchResultTreeNode newNode = treeNode.addResult(path);
-                System.out.println(path);
                 textSearcher.getSearchResultTree().reload();
                 textSearcher.getSearchResultTree().scrollPathToVisible(newNode);
             }
@@ -75,16 +108,22 @@ public class Searching implements Runnable {
         }
     }
 
+    private void filesList(Path path, SearchResultTreeNode treeNode) {
+        if (Files.isDirectory(path)) {
+            directorySearch(path, treeNode);
+        } else if (filter(path)) {
+            fileSearch(path, treeNode);
+        //} else if (zipFileSeacrh(path, treeNode)) {
+        }
+    }
+
     private void directorySearch(Path start, SearchResultTreeNode treeNode) {
         try {
             SearchResultTreeNode newNode = treeNode.addResult(start);
-            Files.list(start).forEach(path -> {
-                if (Files.isDirectory(path)) {
-                    directorySearch(path, newNode);
-                } else if (filter(path)) {
-                    fileSearch(path, newNode);
-                }
-            });
+            Files
+                    .list(start)
+                    .forEach(path -> filesList(path, newNode))
+            ;
         } catch (IOException e) {
             //e.printStackTrace();
         } catch (UncheckedIOException e) {
@@ -98,13 +137,10 @@ public class Searching implements Runnable {
 
     public void run() {
         try {
-            Files.list(directory).forEach(path -> {
-                if (Files.isDirectory(path)) {
-                    directorySearch(path, searchNode);
-                } else if (filter(path)) {
-                    fileSearch(path, searchNode);
-                }
-            });
+            Files
+                    .list(directory)
+                    .forEach(path -> filesList(path, searchNode))
+            ;
         } catch (IOException e) {
             //e.printStackTrace();
         } catch (UncheckedIOException e) {

@@ -44,13 +44,19 @@ public class TextSearcher extends JFrame {
         startSearch(directory, filter, what);
     };
 
-    private final ActionListener nextButtonActionListener = actionEvent -> {
+    private final ActionListener selectNextButtonActionListener = actionEvent -> {
+        String what = searchPanel.getWhatValue();
+        searchResultTabs.getCurrentTab().selectNext(what);
     };
 
-    private final ActionListener previousButtonActionListener = actionEvent -> {
+    private final ActionListener selectPreviousButtonActionListener = actionEvent -> {
+        String what = searchPanel.getWhatValue();
+        searchResultTabs.getCurrentTab().selectPrevious(what);
     };
 
     private final ActionListener selectAllButtonActionListener = actionEvent -> {
+        String what = searchPanel.getWhatValue();
+        searchResultTabs.getCurrentTab().selectAll(what);
     };
 
     private final ActionListener closeTabButtonActionListener = actionEvent -> {
@@ -67,8 +73,8 @@ public class TextSearcher extends JFrame {
 
         JPanel buttons = new JPanel(); buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
         buttons.add(new Button("Search", searchButtonActionListener));
-        buttons.add(new Button("Next", nextButtonActionListener));
-        buttons.add(new Button("Previous", previousButtonActionListener));
+        buttons.add(new Button("Select Next", selectNextButtonActionListener));
+        buttons.add(new Button("Select Previous", selectPreviousButtonActionListener));
         buttons.add(new Button("Select All", selectAllButtonActionListener));
         buttons.add(new Button("Close Tab", closeTabButtonActionListener));
 

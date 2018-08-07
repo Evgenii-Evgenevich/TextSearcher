@@ -43,6 +43,24 @@ public class SearchResultTreeNode implements MutableTreeNode {
         parent.childrenList.add(this);
     }
 
+    public SearchResultTreeNode(Path path, boolean isDirectory, SearchResultTreeNode parent) {
+        this.path = path;
+        this.isDirectory = isDirectory;
+        this.name = path.getFileName().toString();
+        this.childrenList = isDirectory ? new ArrayList<>() : Collections.emptyList();
+        this.parent = parent;
+        parent.childrenList.add(this);
+    }
+
+    public SearchResultTreeNode(Path path, boolean isDirectory, String name, SearchResultTreeNode parent) {
+        this.path = path;
+        this.isDirectory = isDirectory;
+        this.name = name;
+        this.childrenList = isDirectory ? new ArrayList<>() : Collections.emptyList();
+        this.parent = parent;
+        parent.childrenList.add(this);
+    }
+
     public SearchResultTreeNode(int index, Path path, String name, SearchResultTreeNode parent) {
         this.path = path;
         this.isDirectory = Files.isDirectory(path);
@@ -75,6 +93,14 @@ public class SearchResultTreeNode implements MutableTreeNode {
 
     public SearchResultTreeNode addResult(int index, Path path, String name) {
         return new SearchResultTreeNode(index, path, name, this);
+    }
+
+    public SearchResultTreeNode addResultTree(Path path) {
+        return new SearchResultTreeNode(path, true, this);
+    }
+
+    public SearchResultTreeNode addResultTree(Path path, String name) {
+        return new SearchResultTreeNode(path, true, name, this);
     }
 
     public Path getPath() {
@@ -153,6 +179,10 @@ public class SearchResultTreeNode implements MutableTreeNode {
         return childrenList.indexOf(node);
     }
 
+    public int getIndex(Path path) {
+        return childrenList.indexOf(path);
+    }
+
     @Override
     public boolean getAllowsChildren() {
         return isDirectory;
@@ -182,5 +212,29 @@ public class SearchResultTreeNode implements MutableTreeNode {
 
     public Iterator<MutableTreeNode> childrenIt() {
         return childrenList.iterator();
+    }
+
+    public boolean childConteins(Path path) {
+        return childrenList.contains(path);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SearchResultTreeNode node = (SearchResultTreeNode) o;
+
+        if (isDirectory != node.isDirectory) return false;
+        if (path != null ? !path.equals(node.path) : node.path != null) return false;
+        if (name != null ? !name.equals(node.name) : node.name != null) return false;
+        if (childrenList != null ? !childrenList.equals(node.childrenList) : node.childrenList != null) return false;
+        return parent != null ? parent.equals(node.parent) : node.parent == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = path != null ? path.hashCode() : 0;
+        return result;
     }
 }
